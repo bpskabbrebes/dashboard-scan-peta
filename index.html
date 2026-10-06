@@ -17,11 +17,11 @@
                 <p class="text-sm text-slate-500 mt-1">Pencocokan otomatis nama file di Google Drive dengan master prelist SubSLS / Non-SLS Kabupaten Brebes.</p>
             </div>
             <div class="flex items-center space-x-3">
-                <a href="dashboard.html" class="bg-slate-600 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2">
+                <a href="dashboard.html" class="bg-slate-600 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
                     <i class="fa-solid fa-arrow-left"></i>
                     <span>Kembali ke Dashboard Utama</span>
                 </a>
-                <button onclick="syncAndMatchData()" id="refreshBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2">
+                <button onclick="syncAndMatchData()" id="refreshBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
                     <i class="fa-solid fa-rotate"></i>
                     <span>Sinkronisasi Drive</span>
                 </button>
@@ -31,17 +31,17 @@
         <!-- Filter & Search Bar -->
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Cari SubSLS / Desa / Ketua</label>
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Ketik nama SLS atau Desa..." class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
+                <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Cari SubSLS / Desa / ID</label>
+                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Ketik nama SLS, Desa, atau ID..." class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Filter Kecamatan</label>
+                <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Filter Kecamatan</label>
                 <select id="kecamatanFilter" onchange="filterTable()" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
                     <option value="">Semua Kecamatan</option>
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Filter Status File</label>
+                <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Filter Status File</label>
                 <select id="statusFilter" onchange="filterTable()" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
                     <option value="">Semua Status</option>
                     <option value="ada">Sudah Ada File (Matched)</option>
@@ -78,35 +78,34 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaKC3L5j3CB97nTUk3TbWziKxbdUpt5Y4vckqiqqTrFUCUUlTIamQsJTDB_r7e4gr-/exec";
+        // URL Web App Google Apps Script terbaru Anda
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwtNNDp5hBwYTCqZZUqer2-MZTYDrAvFwtxFpgZpDtJNbiq1-HnNNua4EAZd-Vi_NsE/exec";
         
-        // Contoh master data ringkas prelist SubSLS (Anda dapat memperluasnya sesuai file Excel msubsls Anda)
-        const masterSubSLS = [
-            { id: "3329010001000100", kecamatan: "SALEM", desa: "GUNUNGJAYA", nmsls: "RT 001 RW 001", jenis: "SLS" },
-            { id: "3329010001000200", kecamatan: "SALEM", desa: "GUNUNGJAYA", nmsls: "RT 002 RW 001", jenis: "SLS" },
-            { id: "3329010001100100", kecamatan: "SALEM", desa: "GUNUNGJAYA", nmsls: "SAWAH MUNCANG, LINGGA", jenis: "NONSLS_PERTANIAN" },
-            { id: "3329020001000100", kecamatan: "BANTARKAWUNG", desa: "BANTARKAWUNG", nmsls: "RT 001 RW 001", jenis: "SLS" },
-            // Tambahkan baris master lainnya sesuai file msubsls Anda di sini
-        ];
-
+        let masterSubSLS = [];
         let combinedData = [];
 
         async function syncAndMatchData() {
             const statusEl = document.getElementById('loadingStatus');
-            statusEl.innerText = "Menghubungkan ke Google Drive...";
+            statusEl.innerText = "Menghubungkan ke Google Drive & Memuat Data...";
             
             try {
                 let response = await fetch(WEB_APP_URL);
                 let result = await response.json();
                 let driveFiles = result.driveFiles || {};
 
-                // Cocokkan master dengan file di drive berdasarkan nama SLS
+                // Jika masterSubSLS belum diisi, kita ambil dari respons atau gunakan contoh
+                // Pastikan backend Apps Script Anda juga mengirimkan array master data jika diperlukan, 
+                // atau Anda dapat menyematkan data JSON langsung di sini.
+                masterSubSLS = result.masterData || [
+                    { id: "3329010001000100", kecamatan: "SALEM", desa: "GUNUNGJAYA", nmsls: "RT 001 RW 001", jenis: "SLS" },
+                    { id: "3329010001100100", kecamatan: "SALEM", desa: "GUNUNGJAYA", nmsls: "SAWAH MUNCANG, LINGGA", jenis: "NONSLS_PERTANIAN" }
+                ];
+
                 combinedData = masterSubSLS.map(item => {
-                    let searchKey1 = item.nmsls.toUpperCase().trim();
-                    let searchKey2 = item.idsubsls;
+                    let searchKey1 = String(item.nmsls).toUpperCase().trim();
+                    let searchKey2 = String(item.id);
                     
                     let matchedFile = null;
-                    // Cek pencocokan berdasarkan nama SLS atau ID SubSLS pada nama file di Drive
                     for (let key in driveFiles) {
                         if (key.includes(searchKey1) || key.includes(searchKey2)) {
                             matchedFile = driveFiles[key];
@@ -123,7 +122,7 @@
 
                 populateKecamatanDropdown();
                 renderTable(combinedData);
-                statusEl.innerText = "Sinkronisasi selesai.";
+                statusEl.innerText = `Sinkronisasi selesai (${masterSubSLS.length} wilayah dimuat).`;
             } catch (error) {
                 console.error(error);
                 statusEl.innerText = "Gagal memuat data dari Drive.";
@@ -133,6 +132,7 @@
         function populateKecamatanDropdown() {
             let select = document.getElementById('kecamatanFilter');
             let kecSet = [...new Set(masterSubSLS.map(x => x.kecamatan))].sort();
+            select.innerHTML = '<option value="">Semua Kecamatan</option>';
             kecSet.forEach(kec => {
                 let opt = document.createElement('option');
                 opt.value = kec;
@@ -150,13 +150,16 @@
                 return;
             }
 
-            data.forEach((item, index) => {
+            // Batasi render awal agar ringan (misal 100 data pertama, atau gunakan pagination)
+            let displayData = data.slice(0, 150); 
+
+            displayData.forEach((item, index) => {
                 let statusBadge = item.hasFile 
                     ? `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-semibold rounded-full text-xs"><i class="fa-solid fa-check mr-1"></i> Ada File</span>`
                     : `<span class="px-2.5 py-1 bg-amber-50 text-amber-700 font-semibold rounded-full text-xs"><i class="fa-solid fa-xmark mr-1"></i> Belum Ada</span>`;
                 
                 let actionBtn = item.hasFile && item.fileInfo 
-                    ? `<a href="${item.fileInfo.url}" target="_blank" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-semibold transition"><i class="fa-solid fa-eye mr-1"></i> Lihat File</a>`
+                    ? `<a href="${item.fileInfo.url}" target="_blank" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-semibold transition"><i class="fa-solid fa-eye mr-1"></i> Lihat</a>`
                     : `<span class="text-xs text-slate-400 italic">-</span>`;
 
                 let row = `
@@ -180,7 +183,7 @@
             let selectedStatus = document.getElementById('statusFilter').value;
 
             let filtered = combinedData.filter(item => {
-                let matchKeyword = item.nmsls.toLowerCase().includes(keyword) || item.desa.toLowerCase().includes(keyword) || item.id.includes(keyword);
+                let matchKeyword = String(item.nmsls).toLowerCase().includes(keyword) || String(item.desa).toLowerCase().includes(keyword) || String(item.id).includes(keyword);
                 let matchKec = selectedKec === "" || item.kecamatan === selectedKec;
                 let matchStatus = selectedStatus === "" || (selectedStatus === "ada" && item.hasFile) || (selectedStatus === "belum" && !item.hasFile);
 
@@ -190,7 +193,6 @@
             renderTable(filtered);
         }
 
-        // Jalankan sinkronisasi saat halaman dibuka
         syncAndMatchData();
     </script>
 </body>
