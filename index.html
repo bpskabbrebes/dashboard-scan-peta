@@ -16,10 +16,16 @@
                 <h1 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-map-marked-alt text-emerald-600 mr-2"></i>Monitoring Target & Scan Peta 3329</h1>
                 <p class="text-sm text-slate-500 mt-1">Pemantauan direktori Google Drive dibandingkan dengan target wilayah (SLS & Non-SLS).</p>
             </div>
-            <button onclick="loadDriveData()" id="refreshBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
-                <i class="fa-solid fa-rotate"></i>
-                <span>Muat Ulang Data Drive</span>
-            </button>
+            <div class="flex items-center space-x-3">
+                <button onclick="downloadExcel()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Download Excel</span>
+                </button>
+                <button onclick="loadDriveData()" id="refreshBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Muat Ulang Data</span>
+                </button>
+            </div>
         </div>
 
         <!-- Metrics Cards -->
@@ -83,7 +89,6 @@
     <script>
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaKC3L5j3CB97nTUk3TbWziKxbdUpt5Y4vckqiqqTrFUCUUlTIamQsJTDB_r7e4gr-/exec";
         
-        // Target Total (SLS + Non-SLS) per Kecamatan dari file msubsls
         const targetWilayahMap = {
             "BANJARHARJO": 707,
             "BANTARKAWUNG": 560,
@@ -197,6 +202,41 @@
                 `;
                 tbody.innerHTML += row;
             });
+        }
+
+        // Fungsi untuk mengunduh rekapitulasi data ke format Excel (CSV)
+        function downloadExcel() {
+            if (globalData.length === 0) {
+                alert("Data belum dimuat atau kosong!");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; // BOM untuk UTF-8 agar karakter spesial terbaca aman di Excel
+            csvContent += "No,Nama Kecamatan,Target Wilayah,Realisasi File,Kekurangan,Nama File,URL File\n";
+
+            let rowNum = 1;
+            globalData.forEach(item => {
+                if (item.files.length > 0) {
+                    item.files.forEach(f => {
+                        let kec = `"${item.kecamatan.replace(/"/g, '""')}"`;
+                        let fname = `"${f.name.replace(/"/g, '""')}"`;
+                        let furl = `"${f.url}"`;
+                        csvContent += `${rowNum++},${kec},${item.targetWilayah},${item.jumlahFile},${item.kekurangan},${fname},${furl}\n`;
+                    });
+                } else {
+                    let kec = `"${item.kecamatan.replace(/"/g, '""')}"`;
+                    csvContent += `${rowNum++},${kec},${item.targetWilayah},${item.jumlahFile},${item.kekurangan},"Belum ada file","-` + `"\n`;
+                }
+            });
+
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "rekap_target_dan_scan_peta_brebes.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         loadDriveData();
