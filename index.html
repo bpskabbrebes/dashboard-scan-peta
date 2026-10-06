@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Detail SubSLS & Scan Peta - BPS Kab Brebes</title>
+    <title>Dashboard Monitoring Scan Peta - BPS Kab Brebes</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -13,64 +13,73 @@
         <!-- Header -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-clipboard-check text-emerald-600 mr-2"></i>Checklist Target & Realisasi SubSLS</h1>
-                <p class="text-sm text-slate-500 mt-1">Pencocokan otomatis nama file di Google Drive dengan master prelist SubSLS / Non-SLS Kabupaten Brebes.</p>
+                <h1 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-map-marked-alt text-emerald-600 mr-2"></i>Monitoring Target & Scan Peta 3329</h1>
+                <p class="text-sm text-slate-500 mt-1">Pemantauan direktori Google Drive dibandingkan dengan target wilayah (SLS & Non-SLS).</p>
             </div>
             <div class="flex items-center space-x-3">
-                <a href="dashboard.html" class="bg-slate-600 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span>Kembali ke Dashboard Utama</span>
-                </a>
-                <button onclick="syncAndMatchData()" id="refreshBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
+                <button onclick="downloadExcel()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Download Excel</span>
+                </button>
+                <button onclick="loadDriveData()" id="refreshBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
                     <i class="fa-solid fa-rotate"></i>
-                    <span>Sinkronisasi Drive</span>
+                    <span>Muat Ulang Data</span>
                 </button>
             </div>
         </div>
 
-        <!-- Filter & Search Bar -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Cari SubSLS / Desa / ID</label>
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Ketik nama SLS, Desa, atau ID..." class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
+        <!-- Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Kecamatan</p>
+                    <h3 id="totalKecamatan" class="text-3xl font-bold text-slate-700 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-folder-tree"></i></div>
             </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Filter Kecamatan</label>
-                <select id="kecamatanFilter" onchange="filterTable()" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
-                    <option value="">Semua Kecamatan</option>
-                </select>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Target Wilayah</p>
+                    <h3 id="totalTarget" class="text-3xl font-bold text-indigo-600 mt-1">9,985</h3>
+                </div>
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-bullseye"></i></div>
             </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Filter Status File</label>
-                <select id="statusFilter" onchange="filterTable()" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500">
-                    <option value="">Semua Status</option>
-                    <option value="ada">Sudah Ada File (Matched)</option>
-                    <option value="belum">Belum Ada File (Missing)</option>
-                </select>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total File Tersimpan</p>
+                    <h3 id="totalFiles" class="text-3xl font-bold text-emerald-600 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-file-arrow-down"></i></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Status Sinkronisasi</p>
+                    <h3 class="text-lg font-bold text-slate-700 mt-1 flex items-center"><span class="w-3 h-3 bg-emerald-500 rounded-full inline-block mr-2 animate-pulse"></span> Terhubung</h3>
+                </div>
+                <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-cloud"></i></div>
             </div>
         </div>
 
-        <!-- Tabel Checklist -->
+        <!-- Tabel Detail Folder & File -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-list-check mr-2 text-blue-500"></i>Daftar Checklist SubSLS</h2>
-                <span id="loadingStatus" class="text-xs text-slate-400 italic">Memuat master data...</span>
+                <h2 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-list-ul mr-2 text-blue-500"></i>Monitoring Target vs Realisasi File per Kecamatan</h2>
+                <span id="loadingStatus" class="text-xs text-slate-400 italic">Memuat data dari Google Drive...</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-100">
-                            <th class="p-4 font-semibold">No</th>
-                            <th class="p-4 font-semibold">ID SubSLS</th>
-                            <th class="p-4 font-semibold">Kecamatan / Desa</th>
-                            <th class="p-4 font-semibold">Nama SLS / Wilayah</th>
-                            <th class="p-4 font-semibold text-center">Jenis</th>
-                            <th class="p-4 font-semibold text-center">Status File di Drive</th>
-                            <th class="p-4 font-semibold text-right">Aksi File</th>
+                            <th class="p-4 font-semibold cursor-pointer hover:bg-slate-100" onclick="sortData('kecamatan')">Nama Kecamatan <i class="fa-solid fa-sort ml-1"></i></th>
+                            <th class="p-4 font-semibold text-center cursor-pointer hover:bg-slate-100" onclick="sortData('target')">Target Wilayah <i class="fa-solid fa-sort ml-1"></i></th>
+                            <th class="p-4 font-semibold text-center cursor-pointer hover:bg-slate-100" onclick="sortData('files')">Realisasi File <i class="fa-solid fa-sort ml-1"></i></th>
+                            <th class="p-4 font-semibold text-center">Kekurangan / Selisih</th>
+                            <th class="p-4 font-semibold">Daftar Berkas di Folder</th>
+                            <th class="p-4 font-semibold text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody id="checklistTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
-                        <!-- Data terisi otomatis via JS -->
+                    <tbody id="folderTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
+                        <!-- Data akan dimasukkan lewat JavaScript -->
                     </tbody>
                 </table>
             </div>
@@ -78,122 +87,159 @@
     </div>
 
     <script>
-        // URL Web App Google Apps Script terbaru Anda
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwtNNDp5hBwYTCqZZUqer2-MZTYDrAvFwtxFpgZpDtJNbiq1-HnNNua4EAZd-Vi_NsE/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaKC3L5j3CB97nTUk3TbWziKxbdUpt5Y4vckqiqqTrFUCUUlTIamQsJTDB_r7e4gr-/exec";
         
-        let masterSubSLS = [];
-        let combinedData = [];
+        const targetWilayahMap = {
+            "BANJARHARJO": 707,
+            "BANTARKAWUNG": 560,
+            "BREBES": 844,
+            "BULAKAMBA": 776,
+            "BUMIAYU": 666,
+            "JATIBARANG": 452,
+            "KERSANA": 444,
+            "KETANGGUNGAN": 683,
+            "LARANGAN": 813,
+            "LOSARI": 700,
+            "PAGUYANGAN": 664,
+            "SALEM": 395,
+            "SIRAMPOG": 378,
+            "SONGGOM": 322,
+            "TANJUNG": 441,
+            "TONJONG": 393,
+            "WANASARI": 747
+        };
 
-        async function syncAndMatchData() {
+        let globalData = [];
+
+        async function loadDriveData() {
             const statusEl = document.getElementById('loadingStatus');
-            statusEl.innerText = "Menghubungkan ke Google Drive & Memuat Data...";
-            
+            const tbody = document.getElementById('folderTableBody');
+            statusEl.innerText = "Sedang mengambil data Google Drive...";
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memproses isi folder...</td></tr>`;
+
             try {
                 let response = await fetch(WEB_APP_URL);
                 let result = await response.json();
-                let driveFiles = result.driveFiles || {};
 
-                // Jika masterSubSLS belum diisi, kita ambil dari respons atau gunakan contoh
-                // Pastikan backend Apps Script Anda juga mengirimkan array master data jika diperlukan, 
-                // atau Anda dapat menyematkan data JSON langsung di sini.
-                masterSubSLS = result.masterData || [
-                    { id: "3329010001000100", kecamatan: "SALEM", desa: "GUNUNGJAYA", nmsls: "RT 001 RW 001", jenis: "SLS" },
-                    { id: "3329010001100100", kecamatan: "SALEM", desa: "GUNUNGJAYA", nmsls: "SAWAH MUNCANG, LINGGA", jenis: "NONSLS_PERTANIAN" }
-                ];
-
-                combinedData = masterSubSLS.map(item => {
-                    let searchKey1 = String(item.nmsls).toUpperCase().trim();
-                    let searchKey2 = String(item.id);
-                    
-                    let matchedFile = null;
-                    for (let key in driveFiles) {
-                        if (key.includes(searchKey1) || key.includes(searchKey2)) {
-                            matchedFile = driveFiles[key];
-                            break;
-                        }
-                    }
-
+                document.getElementById('totalKecamatan').innerText = result.totalKecamatan;
+                document.getElementById('totalFiles').innerText = result.totalFiles;
+                
+                globalData = result.data.map(item => {
+                    let cleanName = item.kecamatan.replace(/^\d+\s*/, '').trim().toUpperCase();
+                    let target = targetWilayahMap[cleanName] || 0;
+                    let kekurangan = target - item.jumlahFile;
                     return {
                         ...item,
-                        hasFile: matchedFile !== null,
-                        fileInfo: matchedFile
+                        cleanName: cleanName,
+                        targetWilayah: target,
+                        kekurangan: kekurangan > 0 ? kekurangan : 0
                     };
                 });
-
-                populateKecamatanDropdown();
-                renderTable(combinedData);
-                statusEl.innerText = `Sinkronisasi selesai (${masterSubSLS.length} wilayah dimuat).`;
+                
+                sortData('kecamatan');
+                statusEl.innerText = "Data berhasil diperbarui.";
             } catch (error) {
                 console.error(error);
-                statusEl.innerText = "Gagal memuat data dari Drive.";
+                statusEl.innerText = "Gagal memuat data.";
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Gagal terhubung ke Web App.</td></tr>`;
             }
         }
 
-        function populateKecamatanDropdown() {
-            let select = document.getElementById('kecamatanFilter');
-            let kecSet = [...new Set(masterSubSLS.map(x => x.kecamatan))].sort();
-            select.innerHTML = '<option value="">Semua Kecamatan</option>';
-            kecSet.forEach(kec => {
-                let opt = document.createElement('option');
-                opt.value = kec;
-                opt.innerText = kec;
-                select.appendChild(opt);
-            });
+        function sortData(criteria) {
+            if (criteria === 'kecamatan') {
+                globalData.sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
+            } else if (criteria === 'files') {
+                globalData.sort((a, b) => b.jumlahFile - a.jumlahFile);
+            } else if (criteria === 'target') {
+                globalData.sort((a, b) => b.targetWilayah - a.targetWilayah);
+            }
+            renderTable(globalData);
         }
 
         function renderTable(data) {
-            const tbody = document.getElementById('checklistTableBody');
+            const tbody = document.getElementById('folderTableBody');
             tbody.innerHTML = "";
 
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Tidak ada data ditemukan.</td></tr>`;
-                return;
-            }
+            data.forEach(item => {
+                let fileListHtml = "";
+                if (item.files.length > 0) {
+                    item.files.sort((a, b) => a.name.localeCompare(b.name));
+                    fileListHtml = `<ul class="space-y-1 text-xs max-h-32 overflow-y-auto pr-2">`;
+                    item.files.forEach(f => {
+                        fileListHtml += `<li><a href="${f.url}" target="_blank" class="text-blue-600 hover:underline flex items-center"><i class="fa-regular fa-file-lines mr-1.5 text-slate-400"></i>${f.name}</a></li>`;
+                    });
+                    fileListHtml += `</ul>`;
+                } else {
+                    fileListHtml = `<span class="text-xs text-slate-400 italic">Belum ada file</span>`;
+                }
 
-            // Batasi render awal agar ringan (misal 100 data pertama, atau gunakan pagination)
-            let displayData = data.slice(0, 150); 
-
-            displayData.forEach((item, index) => {
-                let statusBadge = item.hasFile 
-                    ? `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-semibold rounded-full text-xs"><i class="fa-solid fa-check mr-1"></i> Ada File</span>`
-                    : `<span class="px-2.5 py-1 bg-amber-50 text-amber-700 font-semibold rounded-full text-xs"><i class="fa-solid fa-xmark mr-1"></i> Belum Ada</span>`;
-                
-                let actionBtn = item.hasFile && item.fileInfo 
-                    ? `<a href="${item.fileInfo.url}" target="_blank" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-semibold transition"><i class="fa-solid fa-eye mr-1"></i> Lihat</a>`
-                    : `<span class="text-xs text-slate-400 italic">-</span>`;
+                let badgeColor = item.kekurangan > 0 ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700";
+                let statusText = item.kekurangan > 0 ? `Kurang ${item.kekurangan}` : "Target Terpenuhi";
 
                 let row = `
                     <tr class="hover:bg-slate-50/80 transition">
-                        <td class="p-4 text-slate-500">${index + 1}</td>
-                        <td class="p-4 font-mono text-xs text-slate-600">${item.id}</td>
-                        <td class="p-4 font-medium text-slate-800">${item.kecamatan}<br><span class="text-xs font-normal text-slate-500">${item.desa}</span></td>
-                        <td class="p-4 text-slate-700 font-medium">${item.nmsls}</td>
-                        <td class="p-4 text-center"><span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs">${item.jenis}</span></td>
-                        <td class="p-4 text-center">${statusBadge}</td>
-                        <td class="p-4 text-right">${actionBtn}</td>
+                        <td class="p-4 font-medium text-slate-800">
+                            <div class="flex items-center space-x-3">
+                                <i class="fa-solid fa-folder text-amber-400 text-lg"></i>
+                                <span>${item.kecamatan}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center font-semibold text-slate-600">${item.targetWilayah}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 font-semibold rounded-full text-xs">${item.jumlahFile}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="px-2.5 py-1 ${badgeColor} font-semibold rounded-full text-xs">${statusText}</span>
+                        </td>
+                        <td class="p-4 max-w-xs">${fileListHtml}</td>
+                        <td class="p-4 text-right">
+                            <a href="${item.folderUrl}" target="_blank" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition inline-flex items-center space-x-1.5">
+                                <span>Buka</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </td>
                     </tr>
                 `;
                 tbody.innerHTML += row;
             });
         }
 
-        function filterTable() {
-            let keyword = document.getElementById('searchInput').value.toLowerCase();
-            let selectedKec = document.getElementById('kecamatanFilter').value;
-            let selectedStatus = document.getElementById('statusFilter').value;
+        // Fungsi untuk mengunduh rekapitulasi data ke format Excel (CSV)
+        function downloadExcel() {
+            if (globalData.length === 0) {
+                alert("Data belum dimuat atau kosong!");
+                return;
+            }
 
-            let filtered = combinedData.filter(item => {
-                let matchKeyword = String(item.nmsls).toLowerCase().includes(keyword) || String(item.desa).toLowerCase().includes(keyword) || String(item.id).includes(keyword);
-                let matchKec = selectedKec === "" || item.kecamatan === selectedKec;
-                let matchStatus = selectedStatus === "" || (selectedStatus === "ada" && item.hasFile) || (selectedStatus === "belum" && !item.hasFile);
+            let csvContent = "\uFEFF"; // BOM untuk UTF-8 agar karakter spesial terbaca aman di Excel
+            csvContent += "No,Nama Kecamatan,Target Wilayah,Realisasi File,Kekurangan,Nama File,URL File\n";
 
-                return matchKeyword && matchKec && matchStatus;
+            let rowNum = 1;
+            globalData.forEach(item => {
+                if (item.files.length > 0) {
+                    item.files.forEach(f => {
+                        let kec = `"${item.kecamatan.replace(/"/g, '""')}"`;
+                        let fname = `"${f.name.replace(/"/g, '""')}"`;
+                        let furl = `"${f.url}"`;
+                        csvContent += `${rowNum++},${kec},${item.targetWilayah},${item.jumlahFile},${item.kekurangan},${fname},${furl}\n`;
+                    });
+                } else {
+                    let kec = `"${item.kecamatan.replace(/"/g, '""')}"`;
+                    csvContent += `${rowNum++},${kec},${item.targetWilayah},${item.jumlahFile},${item.kekurangan},"Belum ada file","-` + `"\n`;
+                }
             });
 
-            renderTable(filtered);
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "rekap_target_dan_scan_peta_brebes.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
-        syncAndMatchData();
+        loadDriveData();
     </script>
 </body>
 </html>
