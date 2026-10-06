@@ -13,8 +13,8 @@
         <!-- Header -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-map-marked-alt text-emerald-600 mr-2"></i>Monitoring Folder Scan Peta 3329</h1>
-                <p class="text-sm text-slate-500 mt-1">Pemantauan direktori Google Drive dan rincian file per kecamatan secara real-time.</p>
+                <h1 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-map-marked-alt text-emerald-600 mr-2"></i>Monitoring Target & Scan Peta 3329</h1>
+                <p class="text-sm text-slate-500 mt-1">Pemantauan direktori Google Drive dibandingkan dengan target SLS wilayah.</p>
             </div>
             <button onclick="loadDriveData()" id="refreshBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-sm">
                 <i class="fa-solid fa-rotate"></i>
@@ -23,13 +23,20 @@
         </div>
 
         <!-- Metrics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Kecamatan</p>
                     <h3 id="totalKecamatan" class="text-3xl font-bold text-slate-700 mt-1">0</h3>
                 </div>
                 <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-folder-tree"></i></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Target SLS</p>
+                    <h3 id="totalTarget" class="text-3xl font-bold text-indigo-600 mt-1">9,551</h3>
+                </div>
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-bullseye"></i></div>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
@@ -50,16 +57,18 @@
         <!-- Tabel Detail Folder & File -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-list-ul mr-2 text-blue-500"></i>Daftar Folder Kecamatan & Berkas</h2>
+                <h2 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-list-ul mr-2 text-blue-500"></i>Monitoring Target vs Realisasi File per Kecamatan</h2>
                 <span id="loadingStatus" class="text-xs text-slate-400 italic">Memuat data dari Google Drive...</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-100">
-                            <th class="p-4 font-semibold">Nama Kecamatan / Folder</th>
-                            <th class="p-4 font-semibold text-center">Jumlah File</th>
-                            <th class="p-4 font-semibold">Daftar File di Dalam Folder</th>
+                            <th class="p-4 font-semibold cursor-pointer hover:bg-slate-100" onclick="sortData('kecamatan')">Nama Kecamatan <i class="fa-solid fa-sort ml-1"></i></th>
+                            <th class="p-4 font-semibold text-center cursor-pointer hover:bg-slate-100" onclick="sortData('target')">Target SLS <i class="fa-solid fa-sort ml-1"></i></th>
+                            <th class="p-4 font-semibold text-center cursor-pointer hover:bg-slate-100" onclick="sortData('files')">Realisasi File <i class="fa-solid fa-sort ml-1"></i></th>
+                            <th class="p-4 font-semibold text-center">Kekurangan / Selisih</th>
+                            <th class="p-4 font-semibold">Daftar Berkas di Folder</th>
                             <th class="p-4 font-semibold text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -72,93 +81,127 @@
     </div>
 
     <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaKC3L5j3CB97nTUk3TbWziKxbdUpt5Y4vckqiqqTrFUCUUlTIamQsJTDB_r7e4gr-/exec";
-    let globalData = []; // Menyimpan data mentah dari Drive
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaKC3L5j3CB97nTUk3TbWziKxbdUpt5Y4vckqiqqTrFUCUUlTIamQsJTDB_r7e4gr-/exec";
+        
+        // Data Target SLS per Kecamatan berdasarkan file msubsls
+        const targetSLSMap = {
+            "BANJARHARJO": 707,
+            "BANTARKAWUNG": 560,
+            "BREBES": 844,
+            "BULAKAMBA": 776,
+            "BUMIAYU": 666,
+            "JATIBARANG": 452,
+            "KERSANA": 444,
+            "KETANGGUNGAN": 683,
+            "LARANGAN": 813,
+            "LOSARI": 700,
+            "PAGUYANGAN": 664,
+            "SALEM": 395,
+            "SIRAMPOG": 378,
+            "SONGGOM": 322,
+            "TANJUNG": 441,
+            "TONJONG": 393,
+            "WANASARI": 747
+        };
 
-    async function loadDriveData() {
-        const statusEl = document.getElementById('loadingStatus');
-        const tbody = document.getElementById('folderTableBody');
-        statusEl.innerText = "Sedang mengambil data Google Drive...";
-        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memproses isi folder...</td></tr>`;
+        let globalData = [];
 
-        try {
-            let response = await fetch(WEB_APP_URL);
-            let result = await response.json();
+        async function loadDriveData() {
+            const statusEl = document.getElementById('loadingStatus');
+            const tbody = document.getElementById('folderTableBody');
+            statusEl.innerText = "Sedang mengambil data Google Drive...";
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memproses isi folder...</td></tr>`;
 
-            document.getElementById('totalKecamatan').innerText = result.totalKecamatan;
-            document.getElementById('totalFiles').innerText = result.totalFiles;
-            
-            // Simpan data global untuk keperluan sorting
-            globalData = result.data;
-            
-            // Urutkan default berdasarkan nama kecamatan (A-Z)
-            sortData('kecamatan');
+            try {
+                let response = await fetch(WEB_APP_URL);
+                let result = await response.json();
 
-            statusEl.innerText = "Data berhasil diperbarui.";
-        } catch (error) {
-            console.error(error);
-            statusEl.innerText = "Gagal memuat data.";
-            tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500">Gagal terhubung ke Web App.</td></tr>`;
-        }
-    }
-
-    // Fungsi untuk mengurutkan data (Berdasarkan Kecamatan atau Jumlah File)
-    function sortData(criteria) {
-        if (criteria === 'kecamatan') {
-            globalData.sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
-        } else if (criteria === 'files') {
-            globalData.sort((a, b) => b.jumlahFile - a.jumlahFile); // Terbanyak ke sedikit
-        }
-
-        renderTable(globalData);
-    }
-
-    // Fungsi untuk merender ulang tabel ke HTML
-    function renderTable(data) {
-        const tbody = document.getElementById('folderTableBody');
-        tbody.innerHTML = "";
-
-        data.forEach(item => {
-            let fileListHtml = "";
-            if (item.files.length > 0) {
-                // Urutkan nama file di dalam subfolder secara A-Z
-                item.files.sort((a, b) => a.name.localeCompare(b.name));
-
-                fileListHtml = `<ul class="space-y-1 text-xs max-h-32 overflow-y-auto pr-2">`;
-                item.files.forEach(f => {
-                    fileListHtml += `<li><a href="${f.url}" target="_blank" class="text-blue-600 hover:underline flex items-center"><i class="fa-regular fa-file-lines mr-1.5 text-slate-400"></i>${f.name}</a></li>`;
+                document.getElementById('totalKecamatan').innerText = result.totalKecamatan;
+                document.getElementById('totalFiles').innerText = result.totalFiles;
+                
+                // Gabungkan data Drive dengan data Target SLS
+                globalData = result.data.map(item => {
+                    // Normalisasi nama kecamatan dari folder (contoh: "070 Larangan" menjadi "LARANGAN")
+                    let cleanName = item.kecamatan.replace(/^\d+\s*/, '').trim().toUpperCase();
+                    let target = targetSLSMap[cleanName] || 0;
+                    let kekurangan = target - item.jumlahFile;
+                    return {
+                        ...item,
+                        cleanName: cleanName,
+                        targetSLS: target,
+                        kekurangan: kekurangan > 0 ? kekurangan : 0
+                    };
                 });
-                fileListHtml += `</ul>`;
-            } else {
-                fileListHtml = `<span class="text-xs text-slate-400 italic">Belum ada file di dalam folder</span>`;
+                
+                sortData('kecamatan');
+                statusEl.innerText = "Data berhasil diperbarui.";
+            } catch (error) {
+                console.error(error);
+                statusEl.innerText = "Gagal memuat data.";
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Gagal terhubung ke Web App.</td></tr>`;
             }
+        }
 
-            let row = `
-                <tr class="hover:bg-slate-50/80 transition">
-                    <td class="p-4 font-medium text-slate-800">
-                        <div class="flex items-center space-x-3">
-                            <i class="fa-solid fa-folder text-amber-400 text-lg"></i>
-                            <span>${item.kecamatan}</span>
-                        </div>
-                    </td>
-                    <td class="p-4 text-center">
-                        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-semibold rounded-full text-xs">${item.jumlahFile} File</span>
-                    </td>
-                    <td class="p-4 max-w-md">${fileListHtml}</td>
-                    <td class="p-4 text-right">
-                        <a href="${item.folderUrl}" target="_blank" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition inline-flex items-center space-x-1.5">
-                            <span>Buka Folder</span>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                        </a>
-                    </td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    }
+        function sortData(criteria) {
+            if (criteria === 'kecamatan') {
+                globalData.sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
+            } else if (criteria === 'files') {
+                globalData.sort((a, b) => b.jumlahFile - a.jumlahFile);
+            } else if (criteria === 'target') {
+                globalData.sort((a, b) => b.targetSLS - a.targetSLS);
+            }
+            renderTable(globalData);
+        }
 
-    // Muat data saat halaman dibuka
-    loadDriveData();
-</script>
+        function renderTable(data) {
+            const tbody = document.getElementById('folderTableBody');
+            tbody.innerHTML = "";
+
+            data.forEach(item => {
+                let fileListHtml = "";
+                if (item.files.length > 0) {
+                    item.files.sort((a, b) => a.name.localeCompare(b.name));
+                    fileListHtml = `<ul class="space-y-1 text-xs max-h-32 overflow-y-auto pr-2">`;
+                    item.files.forEach(f => {
+                        fileListHtml += `<li><a href="${f.url}" target="_blank" class="text-blue-600 hover:underline flex items-center"><i class="fa-regular fa-file-lines mr-1.5 text-slate-400"></i>${f.name}</a></li>`;
+                    });
+                    fileListHtml += `</ul>`;
+                } else {
+                    fileListHtml = `<span class="text-xs text-slate-400 italic">Belum ada file</span>`;
+                }
+
+                let badgeColor = item.kekurangan > 0 ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700";
+                let statusText = item.kekurangan > 0 ? `Kurang ${item.kekurangan}` : "Target Terpenuhi";
+
+                let row = `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-medium text-slate-800">
+                            <div class="flex items-center space-x-3">
+                                <i class="fa-solid fa-folder text-amber-400 text-lg"></i>
+                                <span>${item.kecamatan}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center font-semibold text-slate-600">${item.targetSLS}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 font-semibold rounded-full text-xs">${item.jumlahFile}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="px-2.5 py-1 ${badgeColor} font-semibold rounded-full text-xs">${statusText}</span>
+                        </td>
+                        <td class="p-4 max-w-xs">${fileListHtml}</td>
+                        <td class="p-4 text-right">
+                            <a href="${item.folderUrl}" target="_blank" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition inline-flex items-center space-x-1.5">
+                                <span>Buka</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        loadDriveData();
+    </script>
 </body>
 </html>
